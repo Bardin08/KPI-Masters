@@ -1,4 +1,7 @@
 ﻿<Solution>
+  <Folder Name="/Solution Files/">
+    <File Path="cli.md" />
+  </Folder>
   <Project Path="Peat.Application\Peat.Application.csproj" Type="Classic C#" />
   <Project Path="Peat.Cli\Peat.Cli.csproj" Type="Classic C#" />
   <Project Path="Peat.Core\Peat.Core.csproj" Type="Classic C#" />
