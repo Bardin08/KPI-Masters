@@ -3,7 +3,7 @@ using Peat.Core.Syntax.Nodes;
 
 namespace Peat.Core.Syntax.Parser;
 
-public class Parser() : IParser
+public class Parser : IParser
 {
     private Queue<Token?> _tokens = [];
     private Token? Current => _tokens.TryPeek(out var token) ? token : null;
@@ -18,12 +18,11 @@ public class Parser() : IParser
         return _previous;
     }
 
-    private Token Expect(TokenType type)
+    private void Expect(TokenType type)
     {
         var token = Consume();
         if (token?.TokenType != type)
-            throw new ParserException($"Expected {type}, got {token?.TokenType ?? TokenType.Eof}");
-        return token;
+            throw new ParserException(ParserError.UnexpectedToken(token));
     }
 
     public INode Parse(IEnumerable<Token> tokens)
@@ -35,7 +34,6 @@ public class Parser() : IParser
     private INode ParseExpression(int precedence = 0)
     {
         var left = ParsePrimary();
-        var parenCount = 0;
 
         while (Current?.TokenType == TokenType.Operator)
         {
@@ -47,14 +45,14 @@ public class Parser() : IParser
             Consume();
 
             if (Current == null || Current.TokenType == TokenType.Eof)
-                throw new ParserException($"Missing right operand for operator '{op.Value}'");
+                throw new ParserException(ParserError.MissingRightOperand(op));
 
             var right = ParseExpression(Precedences.GetPrecedence(op.Value) + 1);
             left = new BinaryNode(left, op.Value, right);
         }
 
         if (Current?.TokenType == TokenType.RParen && _parenCount == 0)
-            throw new ParserException("Unmatched closing parenthesis");
+            throw new ParserException(ParserError.UnmatchedClosingParenthesis(_previous?.Position + 1 ?? -1));
 
         return left;
     }
@@ -62,23 +60,24 @@ public class Parser() : IParser
     private void ValidateOperator(Token op)
     {
         if (_previous?.TokenType == TokenType.Operator)
-            throw new ParserException($"Consecutive operators are not allowed: '{op.Value}'");
+            throw new ParserException(ParserError.ConsecutiveOperators(op));
     }
     private INode ParsePrimary()
     {
         var token = Consume();
-        switch (token.TokenType)
+        switch (token!.TokenType)
         {
             case TokenType.LParen:
                 _parenCount++;
                 var expr = ParseExpression();
                 if (Current?.TokenType != TokenType.RParen)
-                    throw new ParserException("Unmatched opening parenthesis");
+                    throw new ParserException(ParserError.UnmatchedOpeningParenthesis(token));
                 Consume();
+                _parenCount--;
                 return expr;
 
             case TokenType.RParen:
-                throw new ParserException("Unmatched closing parenthesis");
+                throw new ParserException(ParserError.UnmatchedClosingParenthesis(token.Position));
 
             case TokenType.Number:
                 return new NumberNode(token.Value);
@@ -89,8 +88,12 @@ public class Parser() : IParser
             case TokenType.Function:
                 return ParseFunction(token);
 
+            case TokenType.Operator:
+            case TokenType.Invalid:
+            case TokenType.Eof:
+            case TokenType.Comma:
             default:
-                throw new ParserException($"Unexpected token: {token.TokenType.ToString()}");
+                throw new ParserException(ParserError.UnexpectedToken(token));
         }
     }
 
@@ -98,33 +101,36 @@ public class Parser() : IParser
     {
         var args = new List<INode>();
         Expect(TokenType.LParen);
+        _parenCount++;
     
         if (Current == null || Current.TokenType == TokenType.Eof)
-            throw new ParserException("Unclosed function call");
+            throw new ParserException(ParserError.UnexpectedFunctionCall(func!));
 
         if (Current.TokenType == TokenType.RParen)
-            throw new ParserException($"Function {func.Value} requires at least one argument");
+            throw new ParserException(ParserError.FunctionRequiresAtLeastOneArgument(func!));
 
         while (Current != null && Current.TokenType != TokenType.RParen)
         {
             if (Current.TokenType == TokenType.Comma)
-                throw new ParserException("Unexpected comma in function arguments");
+                throw new ParserException(ParserError.UnexpectedToken(Current));
             
             args.Add(ParseExpression());
-        
+
             if (Current == null || Current.TokenType == TokenType.Eof)
-                throw new ParserException("Unclosed function call");
+                throw new ParserException(ParserError.UnclosedFunctionCall(func!));
             
             if (Current.TokenType == TokenType.Comma)
             {
                 Consume();
                 if (Current?.TokenType == TokenType.RParen)
-                    throw new ParserException("Trailing comma in function arguments");
+                    throw new ParserException(ParserError.UnexpectedToken(Current));
             }
         }
     
         Expect(TokenType.RParen);
-        return new FunctionNode(func.Value, args);
+        _parenCount--;
+
+        return new FunctionNode(func!.Value, args);
     }
 }
 

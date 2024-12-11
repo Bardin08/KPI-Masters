@@ -1,12 +1,6 @@
 namespace Peat.Core.Syntax.Parser;
 
-public class ParserException : Exception
+public class ParserException(ParserError error) : Exception(error.Message)
 {
-    public ParserException(string? message) : base(message)
-    {
-    }
-
-    public ParserException(string? message, Exception? innerException) : base(message, innerException)
-    {
-    }
+    public ParserError Error { get; } = error;
 }
