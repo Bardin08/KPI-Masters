@@ -1,22 +1,20 @@
 namespace Peat.Core.Lexer;
 
-public ref struct Lexer() : ILexer
+public class Lexer : ILexer
 {
-    private ReadOnlySpan<char> _input;
     private int _position = 0;
-    private char CurrentChar => _position < _input.Length ? _input[_position] : '\0';
 
     public IEnumerable<Token> Tokenize(string input)
     {
         var tokens = new List<Token>();
         var errors = new List<LexerError>();
 
-        _input = input.AsSpan();
+        var span = input.AsSpan();
         _position = 0;
 
         while (true)
         {
-            var token = NextToken();
+            var token = NextToken(span);
         
             if (token.TokenType == TokenType.Invalid)
             {
@@ -36,19 +34,19 @@ public ref struct Lexer() : ILexer
         return tokens;
     }
 
-    private Token NextToken()
+    private Token NextToken(ReadOnlySpan<char> span)
     {
-        while (_position < _input.Length)
+        while (_position < span.Length)
         {
-            if (char.IsWhiteSpace(CurrentChar))
+            if (char.IsWhiteSpace(span[_position]))
             {
-                while (_position < _input.Length && char.IsWhiteSpace(_input[_position]))
+                while (_position < span.Length && char.IsWhiteSpace(span[_position]))
                     _position++;
                 continue;
             }
 
             var currentPosition = _position;
-            var current = CurrentChar;
+            var current = span[currentPosition];
             _position++;
 
             switch (current)
@@ -69,7 +67,7 @@ public ref struct Lexer() : ILexer
             if (char.IsLetter(current))
             {
                 _position--; // Move back to start of identifier
-                var identifier = ReadIdentifier();
+                var identifier = ReadIdentifier(span);
                 var tokenType = IsFunction(identifier) ? TokenType.Function : TokenType.Variable;
                 return new Token(tokenType, currentPosition, identifier.ToString());
             }
@@ -77,7 +75,7 @@ public ref struct Lexer() : ILexer
             if (char.IsDigit(current))
             {
                 _position--; // Move back to start of number
-                var number = ReadNumber();
+                var number = ReadNumber(span);
                 return new Token(TokenType.Number, currentPosition, number.ToString());
             }
 
@@ -87,30 +85,30 @@ public ref struct Lexer() : ILexer
         return new Token(TokenType.Eof, _position, "EOF");
     }
 
-    private ReadOnlySpan<char> ReadIdentifier()
+    private ReadOnlySpan<char> ReadIdentifier(ReadOnlySpan<char> span)
     {
         var start = _position;
-        while (_position < _input.Length && (char.IsLetterOrDigit(_input[_position]) || _input[_position] == '_'))
+        while (_position < span.Length && (char.IsLetterOrDigit(span[_position]) || span[_position] == '_'))
         {
             _position++;
         }
 
-        return _input[start.._position];
+        return span[start.._position];
     }
 
-    private ReadOnlySpan<char> ReadNumber()
+    private ReadOnlySpan<char> ReadNumber(ReadOnlySpan<char> span)
     {
         var start = _position;
         bool hasDecimalPoint = false;
 
-        while (_position < _input.Length)
+        while (_position < span.Length)
         {
-            if (_input[_position] == '.' && !hasDecimalPoint)
+            if (span[_position] == '.' && !hasDecimalPoint)
             {
                 hasDecimalPoint = true;
                 _position++;
             }
-            else if (char.IsDigit(_input[_position]))
+            else if (char.IsDigit(span[_position]))
             {
                 _position++;
             }
@@ -120,7 +118,7 @@ public ref struct Lexer() : ILexer
             }
         }
 
-        return _input[start.._position];
+        return span[start.._position];
     }
 
     private bool IsFunction(ReadOnlySpan<char> identifier)
@@ -129,6 +127,4 @@ public ref struct Lexer() : ILexer
                identifier.SequenceEqual("cos".AsSpan()) ||
                identifier.SequenceEqual("sqrt".AsSpan());
     }
-
-    public bool HasMoreTokens() => _position < _input.Length;
 }
