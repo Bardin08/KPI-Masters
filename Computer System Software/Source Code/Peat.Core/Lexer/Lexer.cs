@@ -9,7 +9,7 @@ public ref struct Lexer() : ILexer
     public IEnumerable<Token> Tokenize(string input)
     {
         var tokens = new List<Token>();
-        var errors = new List<string>();
+        var errors = new List<LexerError>();
 
         _input = input.AsSpan();
         _position = 0;
@@ -20,7 +20,8 @@ public ref struct Lexer() : ILexer
         
             if (token.TokenType == TokenType.Invalid)
             {
-                errors.Add($"Invalid token '{token.Value}' at position {token.Position}");
+                errors.Add(
+                    new LexerError($"Invalid token '{token.Value}' at position {token.Position}", token.Position));
             }
         
             tokens.Add(token);
