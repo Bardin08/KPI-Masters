@@ -23,7 +23,7 @@ public class ParserTests
     {
         const string input = "1 + 2 * 3";
         var lexer = new Lexer();
-        var parser = new Parser();
+        var parser = new StateMachineParser();
         var ast = parser.Parse(lexer.Tokenize(input));
 
         Assert.IsType<BinaryNode>(ast);
@@ -38,7 +38,7 @@ public class ParserTests
     {
         const string input = "sin(x + 1)";
         var lexer = new Lexer();
-        var parser = new Parser();
+        var parser = new StateMachineParser();
         var ast = parser.Parse(lexer.Tokenize(input));
 
         Assert.IsType<FunctionNode>(ast);
@@ -54,7 +54,7 @@ public class ParserTests
     [InlineData("1 + 2)", "Unmatched closing parenthesis")]
     public void ThrowsOnMismatchedParentheses(string input, string expectedMessage)
     {
-        var parser = new Parser();
+        var parser = new StateMachineParser();
         var lexer = new Lexer();
         var tokens = lexer.Tokenize(input);
         var ex = Assert.Throws<ParserException>(() => parser.Parse(tokens));
