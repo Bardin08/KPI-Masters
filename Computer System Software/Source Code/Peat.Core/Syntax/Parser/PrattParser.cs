@@ -8,6 +8,7 @@ public class PrattParser : IParser
     private readonly List<ParserError> _errors = new();
     private IEnumerator<Token> _tokenEnumerator = null!;
     private Token _current = null!;
+    private int _parenthesesCount;
 
     private readonly Dictionary<string, (int Precedence, bool IsLeftAssociative)> _operators = new()
     {
@@ -26,17 +27,28 @@ public class PrattParser : IParser
         try
         {
             _tokenEnumerator = enumerable.GetEnumerator();
+            _parenthesesCount = 0;
             Advance();
-            
+
             _current = _tokenEnumerator.Current;
             var root = ParseExpression(0);
+
+            switch (_parenthesesCount)
+            {
+                case > 0:
+                    _errors.Add(ParserError.UnmatchedOpeningParenthesis(_current));
+                    break;
+                case < 0:
+                    _errors.Add(ParserError.UnmatchedClosingParenthesis(_current.Position));
+                    break;
+            }
 
             if (_errors.Count != 0)
                 throw new BulkParserException(_errors);
 
             return root;
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not BulkParserException)
         {
             throw new BulkParserException(_errors, ex);
         }
@@ -55,8 +67,19 @@ public class PrattParser : IParser
 
         while (true)
         {
-            if (_current.TokenType is TokenType.Eof or TokenType.RParen)
+            if (_current.TokenType is TokenType.Eof)
                 break;
+
+            if (_current.TokenType is TokenType.RParen)
+            {
+                if (_parenthesesCount <= 0)
+                {
+                    _parenthesesCount--;
+                    _errors.Add(ParserError.UnmatchedClosingParenthesis(_current.Position));
+                }
+
+                break;
+            }
 
             var (precedence, isLeftAssoc) = GetOperatorInfo(_current);
             if (precedence < minPrecedence)
@@ -84,7 +107,6 @@ public class PrattParser : IParser
             TokenType.Variable => new VariableNode(token.Value),
             TokenType.Function => ParseFunction(token),
             TokenType.LParen => ParseParenthesis(),
-            TokenType.Operator => ParsePrefix(), // Skip operator and parse next token
             _ => HandleError($"Unexpected token: {token.Value}", token.Position)
         };
     }
@@ -124,6 +146,7 @@ public class PrattParser : IParser
 
     private INode ParseParenthesis()
     {
+        _parenthesesCount++;
         var expr = ParseExpression(0);
 
         if (_current.TokenType != TokenType.RParen)
@@ -132,6 +155,7 @@ public class PrattParser : IParser
             return expr;
         }
 
+        _parenthesesCount--;
         Advance();
         return expr;
     }

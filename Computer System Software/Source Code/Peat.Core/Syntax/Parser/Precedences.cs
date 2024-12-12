@@ -30,10 +30,4 @@ public static class Precedences
     };
 
     public static int GetPrecedence(string op) => Precedence.GetValueOrDefault(op, 0);
-
-    public static bool IsLeftAssociative(string op) => op switch
-    {
-        "+" or "-" or "*" or "/" => true,
-        _ => false
-    };
 }
