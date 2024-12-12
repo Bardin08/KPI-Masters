@@ -3,6 +3,7 @@
     <File Path="cli.md" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="Peat.Application.Tests\Peat.Application.Tests.csproj" Type="Classic C#" />
     <Project Path="Peat.Domain.Tests\Peat.Domain.Tests.csproj" Type="Classic C#" />
   </Folder>
   <Project Path="Peat.Application\Peat.Application.csproj" Type="Classic C#" />
