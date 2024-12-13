@@ -33,15 +33,8 @@ public class PrattParser : IParser
             _current = _tokenEnumerator.Current;
             var root = ParseExpression(0);
 
-            switch (_parenthesesCount)
-            {
-                case > 0:
-                    _errors.Add(ParserError.UnmatchedOpeningParenthesis(_current));
-                    break;
-                case < 0:
-                    _errors.Add(ParserError.UnmatchedClosingParenthesis(_current.Position));
-                    break;
-            }
+            if (_parenthesesCount != 0)
+                _errors.Add(ParserError.UnmatchedOpeningParenthesis(_current));
 
             if (_errors.Count != 0)
                 throw new BulkParserException(_errors);
@@ -121,6 +114,7 @@ public class PrattParser : IParser
             return new FunctionNode(funcToken.Value, args);
         }
 
+        _parenthesesCount++;
         Advance();
 
         if (_current.TokenType != TokenType.RParen)
@@ -137,7 +131,10 @@ public class PrattParser : IParser
         }
 
         if (_current.TokenType == TokenType.RParen)
+        {
+            _parenthesesCount--;
             Advance();
+        }
         else
             _errors.Add(ParserError.UnclosedFunctionCall(funcToken));
 
