@@ -1,4 +1,5 @@
 ﻿using Peat.Application.Expressions.Services;
+using Peat.Cli.Commands;
 using Peat.Core.Lexer;
 using Peat.Core.Syntax.Parser;
 
@@ -29,6 +30,15 @@ public static class Program
                 }
 
                 await AnalyzeExpression(args[1]);
+                break;
+            case "tree":
+                if (args.Length < 2)
+                {
+                    Console.WriteLine("Error: Expression required for analysis");
+                    return;
+                }
+
+                new VisualizeTreeCommand(args, options).Handle();
                 break;
         }
     }
@@ -62,7 +72,7 @@ public static class Program
     private static Dictionary<string, string> ParseOptions(string[] args)
     {
         var options = new Dictionary<string, string>();
-        for (int i = 0; i < args.Length; i++)
+        for (var i = 0; i < args.Length; i++)
         {
             if (!args[i].StartsWith('-'))
                 continue;
