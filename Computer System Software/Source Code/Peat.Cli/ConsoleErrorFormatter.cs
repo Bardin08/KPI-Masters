@@ -4,8 +4,6 @@ namespace Peat.Cli;
 
 public static class ConsoleErrorFormatter
 {
-    private const int ContextLines = 1;
-   
     public static void PrintError(string expression, ExpressionError error)
     {
         var lines = new List<string>

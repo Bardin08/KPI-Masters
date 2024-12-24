@@ -6,7 +6,7 @@ using Peat.Core.Syntax.Parser;
 
 namespace Peat.Cli.Commands;
 
-public record VisualizeTreeCommand(string[] Args, Dictionary<string, string> Options)
+public record TreeCommandHandler(string[] Args, Dictionary<string, string> Options) : ICliCommandHandler
 {
     private readonly IExpressionService _expressionService = new ExpressionService(
         new Lexer(), new PrattParser());
@@ -19,7 +19,7 @@ public record VisualizeTreeCommand(string[] Args, Dictionary<string, string> Opt
             return;
         }
 
-        var ast = _expressionService.GetAst(Args[1]);
+        var ast = _expressionService.GetParallelTree(Args[1]);
 
         var outputFormat = DetermineOutputFormat();
         var output = GenerateTreeVisualization(ast, outputFormat);
