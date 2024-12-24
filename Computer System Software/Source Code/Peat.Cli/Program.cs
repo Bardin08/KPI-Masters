@@ -1,14 +1,10 @@
-﻿using Peat.Application.Expressions.Services;
-using Peat.Core.Lexer;
-using Peat.Core.Syntax.Parser;
+﻿using Peat.Cli.Commands;
 
 namespace Peat.Cli;
 
 public static class Program
 {
-    private static readonly IExpressionService ExpressionService = new ExpressionService(new Lexer(), new Parser());
-
-    public static async Task Main(string[] args)
+    public static void Main(string[] args)
     {
         if (args.Length == 0)
         {
@@ -19,50 +15,25 @@ public static class Program
         var command = args[0].ToLower();
         var options = ParseOptions(args);
 
-        switch (command)
-        {
-            case "analyze":
-                if (args.Length < 2)
-                {
-                    Console.WriteLine("Error: Expression required for analysis");
-                    return;
-                }
-
-                await AnalyzeExpression(args[1]);
-                break;
-        }
+        var commandHandler = GetCommandHandler(command, args, options);
+        
+        commandHandler.Handle();
     }
 
-    private static async Task AnalyzeExpression(string expression)
+    private static ICliCommandHandler GetCommandHandler(string command, string[] args, Dictionary<string, string> options)
     {
-        Console.WriteLine($"\n🔍 Analyzing expression: \"{expression}\"");
-        Console.WriteLine("═════════════════════════════════════════════════\n");
-
-        try
+        return command switch
         {
-            var result = await ExpressionService.ValidateAsync(expression);
-
-            if (result.IsValid)
-            {
-                Console.WriteLine($"✅ Result: {(result.IsValid ? "Valid" : "Invalid")}");
-                Console.WriteLine($"⏱️ Time: {result.ValidationTime.TotalMilliseconds:F2}ms\n");
-            }
-            else
-            {
-                Console.WriteLine("❌ Analysis failed:");
-                ConsoleErrorFormatter.PrintErrors(expression, result.Errors);
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"💥 Error: {ex.Message}");
-        }
+            "analyze" => new AnalyzeExpressionCommandHandler(args, options),
+            "tree" => new TreeCommandHandler(args, options),
+            _ => throw new ArgumentException($"Unknown command: {command}")
+        };
     }
 
     private static Dictionary<string, string> ParseOptions(string[] args)
     {
         var options = new Dictionary<string, string>();
-        for (int i = 0; i < args.Length; i++)
+        for (var i = 0; i < args.Length; i++)
         {
             if (!args[i].StartsWith('-'))
                 continue;
@@ -85,9 +56,11 @@ public static class Program
 
             Commands:
               analyze <expression>          Run full analysis pipeline
+              tree <expression>             Visualize parallel execution tree
 
             Examples:
               peat analyze "a + b * (c - d)"
+              peat tree "a + b * (c - d)"
 
             """);
     }

@@ -9,40 +9,27 @@ peat [command] [options]
 ## Commands
 
 ### Core Analysis
-Status: ❌
+Status: ✅
 
 `analyze <expression>` - Parse and analyze expression details
 ```bash
 # Options
 -o, --output <format>       Output format (text/json/graph)
--v, --verbose              Show detailed analysis
--s, --save <filename>      Save results to file
+-v, --verbose               Show detailed analysis
+-s, --save <filename>        Save results to file
 
 # Example
 peat analyze "a + b * (c - d)" --output json --verbose
 ```
 
-### Syntax Parsing
-Status: ❌
-
-`parse <expression>` - Validate expression syntax
-```bash
-# Options
--o, --output <format>       Output format (text/json)
--v, --verbose              Show detailed parsing steps
-
-# Example
-peat parse "x * y + z" --verbose
-```
-
 ### Tree Visualization
-Status: ❌
+Status: ✅
 
 `tree <expression>` - Generate expression tree
 ```bash
 # Options
 -o, --output <format>       Output format (text/graph/json)
--s, --save <filename>      Save tree visualization
+-s, --save <filename>        Save tree visualization
 
 # Example
 peat tree "a/b/c" --output graph --save tree.png
