@@ -3,7 +3,7 @@ using Peat.Core.Optimization.Common;
 
 namespace Peat.Core.Optimization
 {
-    public class UnaryOperatorOptimizer : BaseOptimizer
+    public class UnaryOperatorsOptimizer : BaseOptimizer
     {
         private readonly HashSet<string> _unaryOperators = ["+", "-"];
 

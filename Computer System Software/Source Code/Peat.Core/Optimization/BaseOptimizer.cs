@@ -5,7 +5,7 @@ namespace Peat.Core.Optimization;
 
 public abstract class BaseOptimizer : ITokenOptimizer
 {
-    public TransformationContext TransformationContext = new(Guid.NewGuid().ToString("N")[7..12]);
+    protected readonly TransformationContext TransformationContext = new(Guid.NewGuid().ToString("N")[7..12]);
 
     public virtual IEnumerable<Token> Optimize(IEnumerable<Token> tokens)
     {

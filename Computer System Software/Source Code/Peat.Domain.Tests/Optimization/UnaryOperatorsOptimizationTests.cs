@@ -6,7 +6,7 @@ namespace Peat.Domain.Tests.Optimization;
 public class UnaryOperatorsOptimizationTests
 {
     private readonly Lexer _lexer = new();
-    private readonly UnaryOperatorOptimizer _optimizer = new();
+    private readonly UnaryOperatorsOptimizer _optimizer = new();
 
     [Theory]
     [InlineData("-a", "(0 - a)")]
