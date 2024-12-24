@@ -1,13 +1,17 @@
 using System.Diagnostics;
 using Peat.Application.Expressions.Models;
 using Peat.Core.Lexer;
+using Peat.Core.Optimization;
+using Peat.Core.Parallelization;
+using Peat.Core.Syntax.Nodes;
 using Peat.Core.Syntax.Parser;
 
 namespace Peat.Application.Expressions.Services;
 
 public interface IExpressionService
 {
-    Task<ValidationResult> ValidateAsync(string expression);
+    ValidationResult Validate(string expression);
+    INode GetParallelTree(string expression);
 }
 
 public class ExpressionService(ILexer lexer, IParser parser) : IExpressionService
@@ -15,7 +19,7 @@ public class ExpressionService(ILexer lexer, IParser parser) : IExpressionServic
     private readonly ILexer _lexer = lexer;
     private readonly IParser _parser = parser;
 
-    public Task<ValidationResult> ValidateAsync(string expression)
+    public ValidationResult Validate(string expression)
     {
         var sw = Stopwatch.StartNew();
         var errors = new List<ExpressionError>();
@@ -48,11 +52,33 @@ public class ExpressionService(ILexer lexer, IParser parser) : IExpressionServic
             });
         }
 
-        return Task.FromResult(new ValidationResult
+        return new ValidationResult
         {
             IsValid = !errors.Any(),
             Errors = errors,
             ValidationTime = sw.Elapsed
-        });
+        };
+    }
+
+    public INode GetParallelTree(string expression)
+    {
+        var validationResult = Validate(expression);
+        if (!validationResult.IsValid)
+            return new ErrorNode("Invalid expression");
+
+        var tokens = _lexer.Tokenize(expression);
+
+        var expressionOptimizers = new List<ITokenOptimizer>
+        {
+            new UnaryOperatorOptimizer(),
+            new ConstantFoldingOptimizer()
+        };
+
+        tokens = expressionOptimizers.Aggregate(tokens, (current, tokenOptimizer) => tokenOptimizer.Optimize(current));
+
+        var parsedAst = new PrattParser().Parse(tokens);
+        var parallelAst = new ParallelTreeBuilder().Build(parsedAst);
+
+        return parallelAst.OriginalNode;
     }
 }
