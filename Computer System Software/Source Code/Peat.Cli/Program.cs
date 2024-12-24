@@ -1,67 +1,7 @@
-﻿using Peat.Cli.Commands;
+﻿using Peat.Cli;
+using Peat.Cli.Commands;
 
-namespace Peat.Cli;
+var commandParser = new CliCommandParser();
+var comamdHandler = commandParser.GetCommandHandler(args);
 
-public static class Program
-{
-    public static void Main(string[] args)
-    {
-        if (args.Length == 0)
-        {
-            ShowHelp();
-            return;
-        }
-
-        var command = args[0].ToLower();
-        var options = ParseOptions(args);
-
-        var commandHandler = GetCommandHandler(command, args, options);
-        
-        commandHandler.Handle();
-    }
-
-    private static ICliCommandHandler GetCommandHandler(string command, string[] args, Dictionary<string, string> options)
-    {
-        return command switch
-        {
-            "analyze" => new AnalyzeExpressionCommandHandler(args, options),
-            "tree" => new TreeCommandHandler(args, options),
-            _ => throw new ArgumentException($"Unknown command: {command}")
-        };
-    }
-
-    private static Dictionary<string, string> ParseOptions(string[] args)
-    {
-        var options = new Dictionary<string, string>();
-        for (var i = 0; i < args.Length; i++)
-        {
-            if (!args[i].StartsWith('-'))
-                continue;
-
-            var key = args[i].TrimStart('-');
-            var value = i + 1 < args.Length ? args[i + 1] : null;
-            options[key] = value ?? "true";
-            i++;
-        }
-
-        return options;
-    }
-
-    private static void ShowHelp()
-    {
-        Console.WriteLine(
-            """
-
-            PEAT - Parallel Expression Analysis Tool
-
-            Commands:
-              analyze <expression>          Run full analysis pipeline
-              tree <expression>             Visualize parallel execution tree
-
-            Examples:
-              peat analyze "a + b * (c - d)"
-              peat tree "a + b * (c - d)"
-
-            """);
-    }
-}
+comamdHandler.Handle();
