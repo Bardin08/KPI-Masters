@@ -8,7 +8,7 @@ public class ParserException(ParserError error) : Exception(error.Message)
 public class BulkParserException(List<ParserError> errors, Exception? innerException = null)
     : Exception(GetAggregatedError(errors), innerException)
 {
-    public List<ParserError> Errors { get; } = [];
+    public List<ParserError> Errors { get; } = errors;
 
     private static string GetAggregatedError(List<ParserError> errors)
         => string.Join(Environment.NewLine, errors.Select(e => e.Message));
