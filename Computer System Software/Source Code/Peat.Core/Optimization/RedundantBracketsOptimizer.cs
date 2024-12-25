@@ -43,6 +43,15 @@ public class RedundantBracketsOptimizer : BaseOptimizer
                 var isRedundant = IsRedundantBrackets(content);
                 if (isRedundant)
                 {
+                    TransformationContext.RecordTransformation(
+                        "RedundantBracketsOptimization",
+                        "Removed redundant brackets",
+                        content,
+                        inner,
+                        null,
+                        null
+                    );
+
                     var optimizedInner = OptimizeTokens(inner);
                     result.AddRange(optimizedInner);
                 }
@@ -88,10 +97,22 @@ public class RedundantBracketsOptimizer : BaseOptimizer
         foreach (var innerOp in innerOps)
         {
             var innerPrecedence = GetOperatorPrecedence(innerOp.Value);
-            if (prevOp != null && GetOperatorPrecedence(prevOp.Value) > innerPrecedence)
-                return false;
-            if (nextOp != null && GetOperatorPrecedence(nextOp.Value) > innerPrecedence)
-                return false;
+            var shouldKeepForPrevOp = prevOp != null && GetOperatorPrecedence(prevOp.Value) > innerPrecedence;
+            var shouldKeepForNextOp = nextOp != null && GetOperatorPrecedence(nextOp.Value) > innerPrecedence;
+
+            if (!shouldKeepForPrevOp && !shouldKeepForNextOp)
+                continue;
+
+            TransformationContext.RecordTransformation(
+                "RedundantBracketsOptimization",
+                $"Keeping brackets due to operator precedence: inner={innerOp.Value} " +
+                $"prev={prevOp?.Value} next={nextOp?.Value}",
+                tokens,
+                tokens,
+                null,
+                null
+            );
+            return false;
         }
 
         return true;

@@ -1,8 +1,10 @@
 using System.Text;
+using Peat.Cli.Commands.Models;
+using Peat.Core.Optimization.Common;
 
-namespace Peat.Core.Optimization.Common;
+namespace Peat.Cli;
 
-public class ConsoleTransformationReporter(bool useEmojis = true) : ITransformationReporter
+public class ConsoleTransformationReportGenerator(bool useEmojis = true) : ITransformationReportGenerator
 {
     private bool UseEmojis { get; } = useEmojis;
 
@@ -29,13 +31,13 @@ public class ConsoleTransformationReporter(bool useEmojis = true) : ITransformat
         public static string GetResultSymbol(bool useEmojis) => useEmojis ? "🟢 " : "[OUT] ";
     }
 
-    public string GenerateReport(TransformationContext context)
+    public string GenerateReport(OptimizationStepViewModel context)
     {
         var report = new StringBuilder();
         
         AppendHeader(report, context);
         
-        foreach (var step in context.Steps)
+        foreach (var step in context.TransformationSteps!)
         {
             AppendStep(report, step);
         }
@@ -57,12 +59,12 @@ public class ConsoleTransformationReporter(bool useEmojis = true) : ITransformat
         return report.ToString();
     }
 
-    private void AppendHeader(StringBuilder sb, TransformationContext context)
+    private void AppendHeader(StringBuilder sb, OptimizationStepViewModel context)
     {
         AppendFormattedLine(sb, ConsoleFormatting.Cyan,
-            $"Transformation Report for {context.OptimizerId}");
+            $"Transformation Report for {context.Name}");
         AppendFormattedLine(sb, ConsoleFormatting.Cyan,
-            $"Total Steps: {context.TotalTransformations}");
+            $"Total Steps: {context.TransformationSteps!.Count}");
         sb.AppendLine();
     }
 
@@ -73,7 +75,7 @@ public class ConsoleTransformationReporter(bool useEmojis = true) : ITransformat
         sb.AppendLine();
     }
 
-    private void AppendStep(StringBuilder sb, TransformationStep step)
+    private void AppendStep(StringBuilder sb, TransformationStepViewModel step)
     {
         AppendStepHeader(sb, step);
         AppendStepDetails(sb, step);
@@ -93,13 +95,13 @@ public class ConsoleTransformationReporter(bool useEmojis = true) : ITransformat
         sb.AppendLine();
     }
 
-    private void AppendStepHeader(StringBuilder sb, TransformationStep step)
+    private void AppendStepHeader(StringBuilder sb, TransformationStepViewModel step)
     {
         AppendFormattedLine(sb, ConsoleFormatting.WhiteOnBlue,
             $"{ReportSymbols.GetStepSymbol(UseEmojis)}Step ID: {step.Id}");
     }
 
-    private void AppendStepDetails(StringBuilder sb, TransformationStep step)
+    private void AppendStepDetails(StringBuilder sb, TransformationStepViewModel step)
     {
         AppendFormattedLine(sb, ConsoleFormatting.Gray,
             $"{ReportSymbols.GetTimeSymbol(UseEmojis)}Time: {step.Timestamp:yyyy-MM-dd HH:mm:ss.fff}");
@@ -114,7 +116,7 @@ public class ConsoleTransformationReporter(bool useEmojis = true) : ITransformat
             $"{ReportSymbols.GetPositionSymbol(UseEmojis)}Position: {step.Position.StartIndex}-{step.Position.EndIndex}");
     }
 
-    private void AppendTransformationResults(StringBuilder sb, TransformationStep step)
+    private void AppendTransformationResults(StringBuilder sb, TransformationStepViewModel step)
     {
         AppendFormattedLine(sb, ConsoleFormatting.Red,
             $"{ReportSymbols.GetOriginalSymbol(UseEmojis)}Original: {step.Position.OriginalFragment}");
