@@ -1,11 +1,10 @@
-using System.Text;
 using System.Text.Json;
 using Peat.Application.Expressions.Models;
 using Peat.Application.Expressions.Services;
 using Peat.Application.Visualization;
 using Peat.Cli.Commands.Models;
+using Peat.Cli.Formatters;
 using Peat.Core.Lexer;
-using Peat.Core.Optimization.Common;
 using Peat.Core.Syntax.Nodes;
 using Peat.Core.Syntax.Parser;
 
@@ -18,7 +17,8 @@ public record TreeCommandHandler(string[] Args, Dictionary<string, string> Optio
     private readonly IExpressionService _expressionService = new ExpressionService(
         new Lexer(), new PrattParser());
 
-    private readonly ITransformationReportGenerator _reportGenerator = new ConsoleTransformationReportGenerator();
+    private readonly IOutputFormatter _outputFormatter =
+        new DefaultOutputFormatter(new ConsoleTransformationReportGenerator());
 
     public void Handle()
     {
@@ -56,7 +56,7 @@ public record TreeCommandHandler(string[] Args, Dictionary<string, string> Optio
         var output = outputFormat switch
         {
             "json" => JsonSerializer.Serialize(responseViewModel, new JsonSerializerOptions { WriteIndented = true }),
-            _ => FormatOutputString(responseViewModel, Options.ContainsKey("verbose") || Options.ContainsKey("v"))
+            _ => _outputFormatter.Format(responseViewModel, Options.ContainsKey("verbose") || Options.ContainsKey("v"))
         };
         return output;
     }
@@ -78,33 +78,6 @@ public record TreeCommandHandler(string[] Args, Dictionary<string, string> Optio
             "text" => new ColoredPlainTextTreeVisualizer().Visualize(ast),
             _ => new PlainTextVisualizer().Visualize(ast)
         };
-
-    private string FormatOutputString(VisualizationData data, bool verbose)
-    {
-        var sb = new StringBuilder();
-        sb.AppendLine("🌳 Tree Visualization:");
-        sb.AppendLine(data.Tree);
-        sb.AppendLine("\n📊 Performance Metrics:");
-        sb.AppendLine($"⚡ Parallelization Level: {data.Metrics.Parallelization.Level}");
-        sb.AppendLine($"🖥️ Estimated Processors: {data.Metrics.Parallelization.EstimatedProcessors}");
-        sb.AppendLine($"⏱️ Processing Time: {data.ProcessingTime:F2}ms");
-
-        if (data.Metrics.Optimization.Steps.Count > 0)
-        {
-            sb.AppendLine("\n🔄 Optimization Steps:");
-            foreach (var step in data.Metrics.Optimization.Steps)
-            {
-                sb.AppendLine($"  ✨ {step.Name}: {step.TokensBefore} → {step.TokensAfter} tokens");
-
-                if (verbose && !step.TransformationSteps?.Any() is true)
-                {
-                    sb.AppendLine($"  {_reportGenerator.GenerateReport(step)}");
-                }
-            }
-        }
-
-        return sb.ToString();
-    }
 
     private void SaveOutput(string output, string format)
     {
