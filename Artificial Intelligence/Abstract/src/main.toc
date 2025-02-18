@@ -1,0 +1,18 @@
+\babel@toc {ukrainian}{}\relax 
+\contentsline {section}{\numberline {1}Обчислення в обчислювальних графах: зворотне поширення помилки}{1}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Історія алгоритму}{1}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}Як працює алгоритм}{1}{subsection.1.2}%
+\contentsline {subsection}{\numberline {1.3}Чому алгоритм важливий}{1}{subsection.1.3}%
+\contentsline {section}{\numberline {2}Поняття обчислювальних графів}{2}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Обчислювальний граф?}{2}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Основні переваги обчислювальних графів}{2}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Приклад обчислювального графа}{2}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}Значення для нейронних мереж}{3}{subsection.2.4}%
+\contentsline {section}{\numberline {3}Загальна ідея алгоритму зворотного поширення помилки}{4}{section.3}%
+\contentsline {section}{\numberline {4}Практичне застосування backpropagation}{6}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Розпізнавання образів}{7}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Обробка природної мови}{7}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}Рекомендаційні системи}{7}{subsection.4.3}%
+\contentsline {subsection}{\numberline {4.4}Медицина та інші сфери}{8}{subsection.4.4}%
+\contentsline {subsection}{\numberline {4.5}Підсумки}{8}{subsection.4.5}%
+\contentsline {section}{\numberline {5}ВИСНОВКИ}{9}{section.5}%
