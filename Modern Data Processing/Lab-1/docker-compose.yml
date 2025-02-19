@@ -1,0 +1,225 @@
+services:
+  # --- Graylog Related Services ---
+  mongodb:
+    image: "mongo:6.0.18"
+    container_name: mongodb
+    restart: on-failure
+    ports:
+      - "27017:27017"
+    networks:
+      kafka_cluster:
+    volumes:
+      - ./data_logs/graylog/mongodb_data:/data/db
+      - ./data_logs/graylog/mongodb_config:/data/configdb
+
+  datanode:
+    image: "graylog/graylog-datanode:6.1"
+    container_name: graylog-datanode
+    restart: on-failure
+    environment:
+      GRAYLOG_DATANODE_NODE_ID_FILE: "/var/lib/graylog-datanode/node-id"
+      GRAYLOG_DATANODE_PASSWORD_SECRET: "somepasswordpepper"
+      GRAYLOG_DATANODE_ROOT_PASSWORD_SHA2: "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918"
+      GRAYLOG_DATANODE_MONGODB_URI: "mongodb://mongodb:27017/graylog"
+    hostname: datanode
+    ports:
+      - "8999:8999/tcp"   # DataNode API
+      - "9200:9200/tcp"
+      - "9300:9300/tcp"
+    networks:
+      kafka_cluster:
+    volumes:
+      - ./data_logs/graylog/datanode:/var/lib/graylog-datanode
+
+  graylog:
+    image: "graylog/graylog:6.1"
+    container_name: graylog
+    restart: on-failure
+    environment:
+      GRAYLOG_NODE_ID_FILE: "/usr/share/graylog/data/config/node-id"
+      GRAYLOG_HTTP_BIND_ADDRESS: "0.0.0.0:9000"
+      GRAYLOG_MONGODB_URI: "mongodb://mongodb:27017/graylog"
+      GRAYLOG_REPORT_DISABLE_SANDBOX: "true"
+      GRAYLOG_PASSWORD_SECRET: "somepasswordpepper"
+      GRAYLOG_ROOT_PASSWORD_SHA2: "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918"
+      GRAYLOG_HTTP_EXTERNAL_URI: "http://127.0.0.1:9000/"
+    entrypoint: "/usr/bin/tini -- /docker-entrypoint.sh"
+    depends_on:
+      mongodb:
+        condition: service_started
+      datanode:
+        condition: service_started
+    hostname: server
+    ports:
+      - "9000:9000/tcp"  # Graylog web interface and REST API
+      - "5044:5044/tcp"  # Beats
+      - "5140:5140/tcp"  # Syslog TCP
+      - "5140:5140/udp"  # Syslog UDP
+      - "12201:12201/tcp"  # GELF TCP
+      - "12201:12201/udp"  # GELF UDP
+      - "13301:13301/tcp"  # Forwarder data
+      - "13302:13302/tcp"  # Forwarder config
+    networks:
+      kafka_cluster:
+    volumes:
+      - ./data_logs/graylog/server_data:/usr/share/graylog/data
+
+  # --- Kafka Related Services ---
+  kafka1:
+    container_name: kafka1
+    build:
+      context: container_images/kafka/.
+      dockerfile: Dockerfile
+    depends_on:
+      - graylog
+    ports:
+      - '19092:19092'
+      - '7071:7071'
+    logging:
+      driver: gelf
+      options:
+        gelf-address: "udp://127.0.0.1:12201"
+    networks:
+      kafka_cluster:
+    volumes:
+      - ./config/kafka1/server.properties:/kafka/config/server.properties
+      - ./config/kafka1/kafka-metrics.yml:/opt/jmx_exporter/kafka-metrics.yml
+      - ./data_logs/kafka_data/kafka1/:/data/kafka/
+
+  kafka2:
+    container_name: kafka2
+    build:
+      context: container_images/kafka/.
+      dockerfile: Dockerfile
+    depends_on:
+      - graylog
+      - kafka1
+    ports:
+      - '29092:29092'
+      - '7072:7071'
+    logging:
+      driver: gelf
+      options:
+        gelf-address: "udp://127.0.0.1:12201"
+    networks:
+      kafka_cluster:
+    volumes:
+      - ./config/kafka2/server.properties:/kafka/config/server.properties
+      - ./config/kafka2/kafka-metrics.yml:/opt/jmx_exporter/kafka-metrics.yml
+      - ./data_logs/kafka_data/kafka2/:/data/kafka/
+
+  kafka3:
+    container_name: kafka3
+    build:
+      context: container_images/kafka/.
+      dockerfile: Dockerfile
+    depends_on:
+      - graylog
+      - kafka2
+    ports:
+      - '39092:39092'
+      - '7073:7071'
+    logging:
+      driver: gelf
+      options:
+        gelf-address: "udp://127.0.0.1:12201"
+    networks:
+      kafka_cluster:
+    volumes:
+      - ./config/kafka3/server.properties:/kafka/config/server.properties
+      - ./config/kafka3/kafka-metrics.yml:/opt/jmx_exporter/kafka-metrics.yml
+      - ./data_logs/kafka_data/kafka3/:/data/kafka/
+
+
+  kafka-ui:
+    build:
+      context: container_images/provectus/.
+      dockerfile: Dockerfile
+    container_name: kafka-ui
+    depends_on:
+      - kafka1
+      - kafka2
+      - kafka3
+    ports:
+      - "8080:8080"
+    networks:
+      kafka_cluster:
+    volumes:
+      - ./config/provectus/config.yml:/mnt/config.yml:ro 
+
+  kafka-connect:
+    build:
+      context: ./container_images/kafka-connect/.
+      dockerfile: Dockerfile
+    container_name: kafka-connect
+    restart: on-failure
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: "kafka1:9192,kafka2:9192,kafka3:9192"
+      CONNECT_GROUP_ID: "connect-cluster"
+      CONNECT_CONFIG_STORAGE_TOPIC: "connect-configs"
+      CONNECT_OFFSET_STORAGE_TOPIC: "connect-offsets"
+      CONNECT_STATUS_STORAGE_TOPIC: "connect-status"
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: "3"
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: "3"
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: "3"
+      CONNECT_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_REST_ADVERTISED_HOST_NAME: "PLAINTEXT://kafka1:9092,PLAINTEXT://kafka2:9092,PLAINTEXT://kafka3:9092"
+      CONNECT_REST_PORT: "8083"
+      CONNECT_PLUGIN_PATH: "/usr/share/confluent-hub-components,/kafka/plugins"
+    depends_on:
+      - kafka1
+      - kafka2
+      - kafka3
+    logging:
+      driver: gelf
+      options:
+        gelf-address: "udp://127.0.0.1:12201"
+    ports:
+      - "8083:8083"
+    networks:
+      kafka_cluster:
+    volumes:
+      - ./data_logs/kafka-connect:/etc/kafka-connect/
+
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus:latest
+    depends_on:
+      - kafka1
+      - kafka2
+      - kafka3
+      - graylog
+    logging:
+      driver: gelf
+      options:
+        gelf-address: "udp://127.0.0.1:12201"
+    ports:
+      - "9090:9090"
+    networks:
+      kafka_cluster:
+    volumes:
+      - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./data_logs/prometheus_data:/prometheus/data
+
+  grafana:
+    container_name: grafana
+    image: grafana/grafana:latest
+    depends_on:
+      - prometheus
+    logging:
+      driver: gelf
+      options:
+        gelf-address: "udp://127.0.0.1:12201"
+    ports:
+      - "3000:3000"
+    networks:
+      kafka_cluster:
+    volumes:
+      - ./data_logs/grafana_data:/var/lib/grafana
+
+networks:
+  kafka_cluster:
+    driver: bridge
