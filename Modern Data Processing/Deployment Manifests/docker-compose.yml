@@ -220,6 +220,29 @@ services:
     volumes:
       - ./data_logs/grafana_data:/var/lib/grafana
 
+  postgres:
+    build:
+      context: ./container_images/postgresql
+      dockerfile: Dockerfile
+    container_name: postgres
+    restart: always
+    ports:
+      - "7654:5432"
+    environment:
+      POSTGRES_DB: plastic-pollution
+      POSTGRES_PASSWORD: S!r0nGP@ssw0rd
+    volumes:
+      - ./data_logs/postgresql:/var/lib/postgresql/data
+    command: >
+      postgres -c wal_level=logical 
+               -c max_wal_senders=10 
+               -c max_replication_slots=10 
+               -c wal_sender_timeout=0 
+               -c log_statement=all 
+               -c log_connections=on
+    networks:
+      kafka_cluster:
+
 networks:
   kafka_cluster:
     driver: bridge
