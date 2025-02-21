@@ -15,7 +15,7 @@ RUN curl "https://archive.apache.org/dist/kafka/3.8.0/kafka_2.13-3.8.0.tgz" \
     tar -xvzf /opt/kafka/kafka.tgz --strip 1 && \
     rm /opt/kafka/kafka.tgz
 
-RUN wget https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.19.0/jmx_prometheus_javaagent-0.19.0.jar \
+RUN wget https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/1.0.1/jmx_prometheus_javaagent-1.0.1.jar \
     -O /opt/jmx_exporter/jmx_prometheus_javaagent.jar
 
 COPY start-kafka.sh /usr/bin
