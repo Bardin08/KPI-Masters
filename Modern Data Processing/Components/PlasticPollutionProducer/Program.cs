@@ -7,7 +7,7 @@ cts.CancelAfter(TimeSpan.FromSeconds(10));
 
 const string topicName = "int.streaming.plastic.pollution";
 
-foreach (var ppi in FakePlasticDataGenerator.GenerateRecord(100_000))
+foreach (var ppi in FakePlasticDataGenerator.GenerateRecord(100_000_000))
     await KafkaProducer.Produce(topicName, ppi);
 
 return;
@@ -21,7 +21,7 @@ internal static class KafkaProducer
     {
         BootstrapServers = "PLAINTEXT://localhost:19092,PLAINTEXT://localhost:29092,PLAINTEXT://localhost:39092",
         Acks = Acks.None,
-        LingerMs = 50,
+        LingerMs = 0,
         CompressionType = CompressionType.Snappy
     };
 

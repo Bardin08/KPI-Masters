@@ -6,7 +6,7 @@ const string pgCdcTopic = "int.streaming.pg.public.plastics";
 var task1 = Task.Run(() => new KafkaConsumer(kafkaProducerTopic).Consume());
 var task2 = Task.Run(() => new KafkaConsumer(pgCdcTopic).Consume());
 
-await Task.WhenAll(task1, task2);
+await Task.WhenAll(task1);
 
 internal sealed class KafkaConsumer
 {
