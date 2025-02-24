@@ -1,9 +1,15 @@
 name: IMS Labs CI Pipeline
 
 on:
+  pull_request:
+    branches:
+      - master
+    paths:
+      - "Infrastructure Management Solutions/Lab1"
   push:
     paths:
       - "Infrastructure Management Solutions/Lab1"
+  workflow_dispatch:
 
 jobs:
   create-docker-image:
