@@ -1,0 +1,29 @@
+---
+- name: Run Watchtower to update all containers
+  hosts: all
+  become: yes
+
+  vars:
+    # Replace these with your actual GitHub credentials or pass them as extra vars.
+    github_username: "your-github-username"
+    github_token: "your-github-token"
+    # Specify your image from GitHub Container Registry (e.g., ghcr.io/<username>/<repo>:<tag>)
+    github_image: "ghcr.io/your-github-username/your-image:latest"
+    container_name: "my_app_container"
+
+  tasks:
+    - name: Log in to GitHub Container Registry
+      community.docker.docker_login:
+        registry_url: ghcr.io
+        username: "{{ github_username }}"
+        password: "{{ github_token }}"
+
+    - name: Deploy container from GitHub Container Registry
+      community.docker.docker_container:
+        name: "{{ container_name }}"
+        image: "{{ github_image }}"
+        state: started
+        restart_policy: always
+        # Optional: Pass additional parameters if required (ports, volumes, etc.)
+        # ports:
+        #   - "80:80"
