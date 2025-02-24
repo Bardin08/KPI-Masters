@@ -1,7 +1,0 @@
-version: '3'
-services:
-  webapp:
-    build: .
-    ports:
-      - "23414:80"
-    container_name: demo-webapp
