@@ -50,12 +50,18 @@
         state: present
         update_cache: true
 
+    - name: Remove default NGINX site configuration
+      file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+      notify: Reload nginx
+
     - name: Deploy NGINX reverse proxy configuration
       template:
         src: templates/nginx.conf.j2
         dest: /etc/nginx/conf.d/reverse_proxy.conf
       notify: Reload nginx
-
+ 
   handlers:
     - name: Reload nginx
       service:
