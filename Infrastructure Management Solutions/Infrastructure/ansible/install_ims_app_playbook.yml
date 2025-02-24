@@ -1,0 +1,57 @@
+---
+- name: Run Watchtower to update all containers
+  hosts: all
+  become: yes
+
+  vars_files:
+    - config/dev.yml
+
+  tasks:
+    - name: Ensure Docker service is running
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Log in to GitHub Container Registry
+      community.docker.docker_login:
+        registry_url: ghcr.io
+        username: "{{ github_username }}"
+        password: "{{ github_token }}"
+
+    - name: Pull latest image
+      community.docker.docker_image:
+        name: "{{ github_image }}"
+        source: pull
+        force_source: yes
+
+    - name: Deploy container
+      community.docker.docker_container:
+        name: "{{ container_name }}"
+        image: "{{ github_image }}"
+        state: started
+        restart_policy: always
+        ports:
+          - "{{ container_port }}:80"
+        healthcheck:
+          test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:80/"]
+          interval: 30s
+          timeout: 3s
+          retries: 3
+        labels:
+          com.centurylinklabs.watchtower.enable: "true"
+
+    - name: Wait for container to be healthy
+      community.docker.docker_container_info:
+        name: "{{ container_name }}"
+      register: result
+      until: result.container['State']['Health']['Status'] == 'healthy'
+      retries: 30
+      delay: 10
+
+    - name: Verify container is running
+      uri:
+        url: "http://localhost:{{ container_port }}"
+        return_content: yes
+      register: webpage
+      failed_when: webpage.status != 200
