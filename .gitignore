@@ -143,6 +143,8 @@ Modern Data Processing/Deployment Manifests/data_logs
 *.tfstate
 *.tfstate.backup
 *.tfstate.lock.info
+*.terraform.lock.hcl
+*.tfvars
 
 # logs
 *.log
@@ -176,3 +178,7 @@ operations/variable-scripts/variable.json
 
 # Sentinel runtime directory
 .sentinel
+
+# Ansible
+
+inventory
