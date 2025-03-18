@@ -1,0 +1,98 @@
+### Get list of available connectors
+GET http://localhost:8083/connector-plugins
+Accept: application/json
+
+### Get status of running connectors
+GET http://localhost:8083/connectors
+Accept: application/json
+
+### Create Debezium PostgreSQL Connector
+POST http://localhost:8083/connectors
+Content-Type: application/json
+
+{
+  "name": "postgres-connector",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "database.hostname": "postgres",
+    "database.port": "5432",
+    "database.user": "postgres",
+    "database.password": "S!r0nGP@ssw0rd",
+    "database.dbname": "plastic-pollution",
+    "table.include.list": "public.plastics",
+    "plugin.name": "pgoutput",
+    "slot.name": "debezium_slot",
+    "topic.prefix": "int.k-connect.postgres",
+
+    "heartbeat.interval.ms": "5000",
+    "snapshot.mode": "initial",
+    "transforms": "unwrap",
+    "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
+    "transforms.unwrap.drop.tombstones": "false",
+    "transforms.unwrap.delete.handling.mode": "rewrite",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "key.converter.schemas.enable": "false",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "false"
+  }
+}
+
+### Check PostgreSQL connector status
+GET http://localhost:8083/connectors/postgres-connector/status
+Accept: application/json
+
+### Pause PostgreSQL connector
+PUT http://localhost:8083/connectors/postgres-connector/pause
+Accept: application/json
+
+### Resume PostgreSQL connector
+PUT http://localhost:8083/connectors/postgres-connector/resume
+Accept: application/json
+
+### Delete PostgreSQL connector
+DELETE http://localhost:8083/connectors/postgres-connector
+Accept: application/json
+
+### Create SpoolDir Source Connector (CSV)
+POST http://localhost:8083/connectors
+Content-Type: application/json
+
+{
+  "name": "spooldir-csv-connector",
+  "config": {
+    "connector.class": "com.github.jcustenborder.kafka.connect.spooldir.SpoolDirCsvSourceConnector",
+    "task.max": "1",
+    "topic": "int.k-connect.csv.plastic-pollution",
+    "input.path": "/etc/kafka-connect/ext-data/input",
+    "finished.path": "/etc/kafka-connect/ext-data/processed",
+    "error.path": "/etc/kafka-connect/ext-data/failed",
+    "input.file.pattern": ".*\\.csv",
+    "halt.on.error": "false",
+    "schema.generation.enabled": "true",
+    "csv.first.row.as.header": "true",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "false",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "transforms": "SetKey,ExtractKey",
+    "transforms.SetKey.type": "org.apache.kafka.connect.transforms.ValueToKey",
+    "transforms.SetKey.fields": "country",
+    "transforms.ExtractKey.type": "org.apache.kafka.connect.transforms.ExtractField$Key",
+    "transforms.ExtractKey.field": "country"
+  }
+}
+
+### Check SpoolDir connector status
+GET http://localhost:8083/connectors/spooldir-csv-connector/status
+Accept: application/json
+
+### Pause SpoolDir connector
+PUT http://localhost:8083/connectors/spooldir-csv-connector/pause
+Accept: application/json
+
+### Resume SpoolDir connector
+PUT http://localhost:8083/connectors/spooldir-csv-connector/resume
+Accept: application/json
+
+### Delete SpoolDir connector
+DELETE http://localhost:8083/connectors/spooldir-csv-connector
+Accept: application/json

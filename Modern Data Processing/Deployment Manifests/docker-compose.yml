@@ -1,3 +1,4 @@
+---
 services:
   # --- Kafka Related Services ---
   kafka1:
@@ -5,15 +6,9 @@ services:
     build:
       context: container_images/kafka/.
       dockerfile: Dockerfile
-    depends_on:
-      - graylog
     ports:
       - '19092:19092'
       - '7071:7071'
-    logging:
-      driver: gelf
-      options:
-        gelf-address: "udp://127.0.0.1:12201"
     networks:
       kafka_cluster:
     volumes:
@@ -27,15 +22,10 @@ services:
       context: container_images/kafka/.
       dockerfile: Dockerfile
     depends_on:
-      - graylog
       - kafka1
     ports:
       - '29092:29092'
       - '7072:7071'
-    logging:
-      driver: gelf
-      options:
-        gelf-address: "udp://127.0.0.1:12201"
     networks:
       kafka_cluster:
     volumes:
@@ -49,15 +39,10 @@ services:
       context: container_images/kafka/.
       dockerfile: Dockerfile
     depends_on:
-      - graylog
       - kafka2
     ports:
       - '39092:39092'
       - '7073:7071'
-    logging:
-      driver: gelf
-      options:
-        gelf-address: "udp://127.0.0.1:12201"
     networks:
       kafka_cluster:
     volumes:
@@ -107,10 +92,6 @@ services:
       - kafka1
       - kafka2
       - kafka3
-    logging:
-      driver: gelf
-      options:
-        gelf-address: "udp://127.0.0.1:12201"
     ports:
       - "8083:8083"
     networks:
@@ -125,11 +106,6 @@ services:
       - kafka1
       - kafka2
       - kafka3
-      - graylog
-    logging:
-      driver: gelf
-      options:
-        gelf-address: "udp://127.0.0.1:12201"
     ports:
       - "9090:9090"
     networks:
@@ -143,10 +119,6 @@ services:
     image: grafana/grafana:latest
     depends_on:
       - prometheus
-    logging:
-      driver: gelf
-      options:
-        gelf-address: "udp://127.0.0.1:12201"
     ports:
       - "3000:3000"
     networks:
@@ -179,4 +151,5 @@ services:
 
 networks:
   kafka_cluster:
+    name: mdp_kafka_cluster
     driver: bridge
