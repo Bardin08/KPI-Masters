@@ -1,0 +1,70 @@
+Country,Population,Official Language
+Argentina,45195777,Spanish
+Australia,25694393,English
+Bangladesh,164689383,Bengali
+Benin,12123198,French
+Bhutan,771608,Dzongkha
+Brazil,212559417,Portuguese
+Bulgaria,6948445,Bulgarian
+Burkina Faso,20903278,French
+Cameroon,26545864,French and English
+Canada,37742157,English and French
+China,1439323776,Mandarin Chinese
+Colombia,50882891,Spanish
+Cote D_ivoire,26378275,French
+Cyprus,1207359,Greek and Turkish
+ECUADOR,17643054,Spanish
+EMPTY,,
+France,65273511,French
+Germany,83783942,German
+Ghana,31072940,English
+Hong Kong,7496981,Chinese and English
+India,1380004385,Hindi and English
+Indonesia,273523615,Indonesian
+Ireland,4937786,Irish and English
+Italy,60461826,Italian
+Japan,126476461,Japanese
+Kenya,53771296,Swahili and English
+Latvia,1886198,Latvian
+Luxembourg,625978,Luxembourgish, French, and German
+Malaysia,32365999,Malay
+Maldives,540544,Dhivehi
+Mexico,128932753,Spanish
+Montenegro,628066,Montenegrin
+NIGERIA,206139589,English
+Netherlands,17134872,Dutch
+Philippines,109581078,Filipino and English
+Portugal,10196709,Portuguese
+Rwanda,12952218,Kinyarwanda, English, French, and Swahili
+Slovenia,2078938,Slovenian
+South Africa,59308690,11 official languages including Zulu, Xhosa, Afrikaans, English
+Spain,46754778,Spanish
+Sri Lanka,21413249,Sinhala and Tamil
+Switzerland,8654622,German, French, Italian, and Romansh
+Taiwan_ Republic of China (ROC),23816775,Mandarin Chinese
+Tanzania,59734218,Swahili and English
+Thailand,69799978,Thai
+Tunisia,11818619,Arabic
+Turkey,84339067,Turkish
+Ukraine,43733762,Ukrainian
+United Arab Emirates,9890402,Arabic
+United Kingdom,67886011,English
+United States of America,331002651,No official language at federal level (English de facto)
+Vietnam,97338579,Vietnamese
+Armenia,2963243,Armenian
+Chile,19116201,Spanish
+Denmark,5792202,Danish
+Ecuador,17643054,Spanish
+El Salvador,6486205,Spanish
+Greece,10423054,Greek
+Honduras,9904607,Spanish
+Korea,51269185,Korean
+Kuwait,4270571,Arabic
+Lithuania,2722289,Lithuanian
+Nigeria,206139589,English
+Peru,32971854,Spanish
+Romania,19237691,Romanian
+Serbia,8737371,Serbian
+Singapore,5850342,English, Malay, Mandarin, and Tamil
+Togo,8278724,French
+United Kingdom of Great Britain & Northern Ireland,67886011,English
