@@ -1,4 +1,4 @@
-FROM postgres:16
+FROM postgres:17
 
 # Copy the startup script into the initialization directory
 COPY init_replication.sh /docker-entrypoint-initdb.d/

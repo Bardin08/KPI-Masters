@@ -25,7 +25,7 @@ Topology GetTopology()
 {
     IStreamTopologyBuilder[] topologyProviders =
     [
-        new Lab3Streams()
+        new Lab5ConsumerLagStreams()
     ];
 
     var topology1 = topologyProviders
@@ -33,5 +33,6 @@ Topology GetTopology()
             new StreamBuilder(),
             (builder, provider) => provider.BuildTopology(builder))
         .Build();
+
     return topology1;
 }
