@@ -37,4 +37,3 @@ jobs:
           context: ./Infrastructure Management Solutions/Lab1
           push: true
           tags: latest
-          labels: latest
