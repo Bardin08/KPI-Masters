@@ -36,5 +36,5 @@ jobs:
         with:
           context: ./Infrastructure Management Solutions/Lab1
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: latest
           labels: latest
