@@ -32,8 +32,12 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./Infrastructure Management Solutions/Lab1
-          push: true
-          tags: latest
+        run: |
+          # Log in to GitHub Container Registry
+          echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          
+          # Build the Docker image
+          docker build -t ghcr.io/${{ github.repository_owner }}/your-image-name:latest "./Infrastructure Management Solutions/Lab1"
+          
+          # Push the image to GitHub Container Registry
+          docker push ghcr.io/${{ github.repository_owner }}/your-image-name:latest
