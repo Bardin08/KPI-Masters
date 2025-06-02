@@ -1,0 +1,24 @@
+---
+services:
+  web:
+    image: ghcr.io/bardin08/web01:vbardin-ims-update-demo-app-2-6aaebbe
+    container_name: web-app
+    ports:
+      - "80:80"
+      - "443:443"
+    restart: unless-stopped
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_INCLUDE_STOPPED=true
+      - WATCHTOWER_REVIVE_STOPPED=true
+      - WATCHTOWER_POLL_INTERVAL=10
+    restart: unless-stopped
+    command: --label-enable
