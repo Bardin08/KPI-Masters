@@ -2,7 +2,7 @@
 services:
   # Main web application
   web:
-    image: ghcr.io/bardin08/web01:vbardin-ims-update-demo-app-2-6aaebbe
+    image: ghcr.io/bardin08/web01:latest
     container_name: web-app
     ports:
       - "80:80"
