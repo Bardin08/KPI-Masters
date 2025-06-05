@@ -42,7 +42,7 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: "./Infrastructure Management Solutions/complete-demo/static-page"
+          context: .
           file: ./Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
@@ -63,12 +63,14 @@ jobs:
           terraform_version: 1.6.0
 
       - name: Terraform Init
+        working-directory: "./Infrastructure Management Solutions/complete-demo"
         run: terraform init
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.HETZNER_S3_SECRET_KEY }}
 
       - name: Terraform Plan
+        working-directory: "./Infrastructure Management Solutions/complete-demo"
         run: terraform plan -var="hcloud_token=${{ secrets.HCLOUD_TOKEN }}"
         env:
           TF_VAR_hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
@@ -76,6 +78,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.HETZNER_S3_SECRET_KEY }}
 
       - name: Terraform Apply
+        working-directory: "./Infrastructure Management Solutions/complete-demo"
         run: terraform apply -auto-approve -var="hcloud_token=${{ secrets.HCLOUD_TOKEN }}"
         env:
           TF_VAR_hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
@@ -85,6 +88,7 @@ jobs:
 
       - name: Get server IP
         id: server_ip
+        working-directory: "./Infrastructure Management Solutions/complete-demo"
         run: echo "ip=$(terraform output -raw server_ip)" >> $GITHUB_OUTPUT
         env:
           TF_VAR_hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
