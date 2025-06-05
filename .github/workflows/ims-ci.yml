@@ -1,40 +1,100 @@
-name: IMS Labs CI Pipeline
+name: DevOps Demo CI/CD
 
 on:
-  pull_request:
-    branches:
-      - master
-    paths:
-      - "Infrastructure Management Solutions/Lab1"
   push:
-    branches:
-      - master
-    paths:
-      - "Infrastructure Management Solutions/Lab1"
-  workflow_dispatch:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: bardin08/web01
-  
-jobs:
-  create-docker-image:
-    permissions: write-all
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+  IMAGE_NAME: ${{ github.repository }}
 
-      - name: Log in to GitHub Container Registry
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to Container Registry
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: ./Infrastructure Management Solutions/Lab1
+          context: .
+          file: ./Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
-          labels: latest
+          labels: ${{ steps.meta.outputs.labels }}
+
+  deploy-infrastructure:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0
+
+      - name: Terraform Init
+        run: terraform init
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.HETZNER_S3_SECRET_KEY }}
+
+      - name: Terraform Plan
+        run: terraform plan -var="hcloud_token=${{ secrets.HCLOUD_TOKEN }}"
+        env:
+          TF_VAR_hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.HETZNER_S3_SECRET_KEY }}
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve -var="hcloud_token=${{ secrets.HCLOUD_TOKEN }}"
+        env:
+          TF_VAR_hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.HETZNER_S3_SECRET_KEY }}
+          ssh_public_key: ${{ secrets.ssh_public_key }}
+
+      - name: Get server IP
+        id: server_ip
+        run: echo "ip=$(terraform output -raw server_ip)" >> $GITHUB_OUTPUT
+        env:
+          TF_VAR_hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.HETZNER_S3_SECRET_KEY }}
+
+      - name: Update deployment status
+        run: |
+          echo "🚀 Deployment completed!"
+          echo "📱 Main App: http://${{ steps.server_ip.outputs.ip }}/"
+          echo "📊 Grafana: http://${{ steps.server_ip.outputs.ip }}/grafana/"
+          echo "🔍 Kibana: http://${{ steps.server_ip.outputs.ip }}/kibana/"
+          echo "⚡ Prometheus: http://${{ steps.server_ip.outputs.ip }}/prometheus/"
